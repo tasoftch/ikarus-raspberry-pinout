@@ -126,6 +126,15 @@ interface RaspberryPiDeviceInterface
 	public function getCpuFrequency(): int;
 
 	/**
+	 * Performs a measure of cpu current usage. This method blocks the current process during measure!
+	 * Result is returned in percent
+	 *
+	 * @param float|int $measureTime
+	 * @return float
+	 */
+	public function getCpuUsage(float $measureTime = 1): float;
+
+	/**
 	 * Converts any pin number from a given number system into another
 	 *
 	 * @param int $pinNumber
@@ -202,4 +211,13 @@ interface RaspberryPiDeviceInterface
 	 * @return InputPinInterface|null
 	 */
 	public function getOutputPin(int $bcmPin): ?OutputPinInterface;
+
+	/**
+	 * Maintains a safe endless loop with interval.
+	 * The callback may return a numeric value to change the next interval or false to exit the loop..
+	 *
+	 * @param float $interval
+	 * @param callable $callback
+	 */
+	public function loop(float $interval, callable $callback);
 }

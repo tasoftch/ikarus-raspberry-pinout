@@ -143,6 +143,35 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 	}
 
 	/**
+	 * Performs a measure of cpu current usage. This method blocks the current process during measure!
+	 * Result is returned in percent
+	 *
+	 * @param float|int $measureTime
+	 * @return float
+	 */
+	public function getCpuUsage(float $measureTime = 1): float {
+		if(preg_match("/^cpu\s+([0-9\s]+)$/im", file_get_contents("/proc/stat"), $ms)) {
+			list($usr,/* Not used */, $sys, $idle) = preg_split("/\s+/", $ms[1]);
+			$usage = [$usr+$sys, $idle];
+		}
+
+		declare(ticks=1) {
+			usleep($measureTime * 1e6);
+		}
+
+		if(preg_match("/^cpu\s+([0-9\s]+)$/im", file_get_contents("/proc/stat"), $ms)) {
+			list($usr,/* Not used */, $sys, $idle) = preg_split("/\s+/", $ms[1]);
+			list($ou, $oi) = $usage;
+
+			$du = $usr+$sys-$ou;
+			$di = $idle-$oi;
+
+			return $du / ($du+$di) * 100;
+		}
+		return 0;
+	}
+
+	/**
 	 * @inheritDoc
 	 */
 	public function convertPinNumber(int $pinNumber, int $from = self::GPIO_NS_BCM, int $to = self::GPIO_NS_BOARD): int
@@ -227,6 +256,9 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 			$pins[ $pin->getPinNumber() ] = $pin;
 			$this->usedPins[ $pin->getPinNumber() ] = $pin;
 		};
+
+		$resistor = 0;
+		$activeLow = false;
 
 		foreach($pinout->yieldInputPin($resistor, $activeLow) as $pin) {
 			if(isset($this->usedPins[$pin]))
@@ -343,5 +375,39 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 	public function getOutputPin(int $bcmPin): ?OutputPinInterface
 	{
 		return ($p = $this->getPin($bcmPin)) instanceof OutputPinInterface ? $p : NULL;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function loop(float $interval, callable $callback) {
+		if(function_exists("pcntl_signal")) {
+			$handler = function() {
+				$this->cleanup();
+				echo PHP_EOL;
+				exit();
+			};
+
+			pcntl_signal(SIGTERM, $handler);
+			pcntl_signal(SIGINT, $handler);
+		}
+		while (1) {
+			$int = $interval;
+			$res = $callback();
+			if($res === false)
+				break;
+			if(is_numeric($res))
+				$int = $res;
+
+			declare(ticks=1) {
+				usleep($int * 1e6);
+			}
+		}
+	}
+
+
+	public function __destruct()
+	{
+		$this->cleanup();
 	}
 }

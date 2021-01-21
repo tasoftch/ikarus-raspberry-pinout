@@ -14,5 +14,8 @@
   },
   "require" : {
     "php": ">=7.2"
+  },
+  "suggest": {
+    "ext-pcntl": "*"
   }
 }
