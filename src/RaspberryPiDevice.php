@@ -405,6 +405,64 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 		}
 	}
 
+	/**
+	 * @inheritDoc
+	 */
+	public function watchEdge($timeout, int $edge, InputPinInterface ...$inputPins): ?InputPinInterface {
+		$seconds = floor($timeout);
+		$micro = ($timeout - $seconds) * 1e6;
+
+		$read = $write = $streams = $pins = $states = [];
+
+		if(function_exists("pcntl_signal")) {
+			$handler = function() use (&$streams) {
+				array_walk($streams, function($v) { @fclose($v); });
+				$this->cleanup();
+				echo PHP_EOL;
+				exit();
+			};
+
+			pcntl_signal(SIGTERM, $handler);
+			pcntl_signal(SIGINT, $handler);
+		}
+
+		foreach($inputPins as $pin) {
+			$p = $pin->getPinNumber();
+			$pins[$p] = $pin;
+			if($s = @fopen("/sys/class/gpio/gpio$p/value", 'r')) {
+				stream_set_blocking($s, false);
+				$states[$p] = fread($s, 1) * 1;
+				@rewind($s);
+				$streams[$p] = $s;
+			}
+		}
+
+		declare(ticks=1) {
+			$result = @stream_select($read, $write, $streams, $seconds, $micro);
+		}
+
+		if (false === $result) {
+			return NULL;
+		}
+
+		$result = NULL;
+
+		foreach ($streams as $pin => $stream) {
+			$value = fread($stream, 1);
+			@rewind($stream);
+
+			if ($value !== false && $value != $states[$pin]) {
+				if($edge & 1 && $value>0 || $edge & 2 && $value < 1) {
+					$result = $pins[$pin];
+					break;
+				}
+			}
+		}
+
+		array_walk($streams, function($v) { @fclose($v); });
+		return $result;
+	}
+
 
 	public function __destruct()
 	{

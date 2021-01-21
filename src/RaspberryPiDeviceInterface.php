@@ -75,6 +75,10 @@ interface RaspberryPiDeviceInterface
 	/** @var int UART Pin */
 	const MODE_UART         = 1<<6;
 
+	const EDGE_RISING = 1;
+	const EDGE_FALLING = 2;
+	const EDGE_BOTH = 3;
+
 	/**
 	 * Gets a singleton instance of the raspberry pi device.
 	 * Please only create a board instance using this method!
@@ -220,4 +224,15 @@ interface RaspberryPiDeviceInterface
 	 * @param callable $callback
 	 */
 	public function loop(float $interval, callable $callback);
+
+	/**
+	 * This method blocks the current thread until one of the passed pins change its value.
+	 * The edge flag defines, if the watching ends on raising (from 0 to 1) or falling (from 1 to 0) or one of them.
+	 *
+	 * @param $timeout
+	 * @param int $edge
+	 * @param InputPinInterface ...$inputPins
+	 * @return InputPinInterface|null
+	 */
+	public function watchEdge($timeout, int $edge, InputPinInterface ...$inputPins): ?InputPinInterface;
 }
