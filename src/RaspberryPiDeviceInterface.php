@@ -35,6 +35,7 @@
 namespace Ikarus\Raspberry;
 
 
+use Ikarus\Raspberry\Edge\EdgeInterface;
 use Ikarus\Raspberry\Exception\OccupiedPinException;
 use Ikarus\Raspberry\Exception\RaspberryPiException;
 use Ikarus\Raspberry\Pin\InputPinInterface;
@@ -74,10 +75,6 @@ interface RaspberryPiDeviceInterface
 
 	/** @var int UART Pin */
 	const MODE_UART         = 1<<6;
-
-	const EDGE_RISING = 1;
-	const EDGE_FALLING = 2;
-	const EDGE_BOTH = 3;
 
 	/**
 	 * Gets a singleton instance of the raspberry pi device.
@@ -230,9 +227,8 @@ interface RaspberryPiDeviceInterface
 	 * The edge flag defines, if the watching ends on raising (from 0 to 1) or falling (from 1 to 0) or one of them.
 	 *
 	 * @param $timeout
-	 * @param int $edge
-	 * @param InputPinInterface ...$inputPins
-	 * @return InputPinInterface|null
+	 * @param EdgeInterface ...$edges
+	 * @return EdgeInterface|null
 	 */
-	public function watchEdge($timeout, int $edge, InputPinInterface ...$inputPins): ?InputPinInterface;
+	public function watchEdge($timeout, EdgeInterface ...$edges): ?EdgeInterface;
 }

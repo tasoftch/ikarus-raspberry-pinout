@@ -35,6 +35,7 @@
 namespace Ikarus\Raspberry;
 
 
+use Ikarus\Raspberry\Edge\EdgeInterface;
 use Ikarus\Raspberry\Exception\OccupiedPinException;
 use Ikarus\Raspberry\Exception\RaspberryPiException;
 use Ikarus\Raspberry\Pin\InputPin;
@@ -408,11 +409,11 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 	/**
 	 * @inheritDoc
 	 */
-	public function watchEdge($timeout, int $edge, InputPinInterface ...$inputPins): ?InputPinInterface {
+	public function watchEdge($timeout, EdgeInterface ...$edges): ?EdgeInterface {
 		$seconds = floor($timeout);
 		$micro = ($timeout - $seconds) * 1e6;
 
-		$read = $write = $streams = $pins = $states = [];
+		$read = $write = $streams = $pins = $states = $debounces = [];
 
 		if(function_exists("pcntl_signal")) {
 			$handler = function() use (&$streams) {
@@ -426,38 +427,58 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 			pcntl_signal(SIGINT, $handler);
 		}
 
-		foreach($inputPins as $pin) {
-			$p = $pin->getPinNumber();
-			$pins[$p] = $pin;
+		foreach($edges as $edge) {
+			$p = $edge->getInputPin()->getPinNumber();
+			$pins[$p] = $edge;
 			if($s = @fopen("/sys/class/gpio/gpio$p/value", 'r')) {
+				file_put_contents("/sys/class/gpio/gpio$p/edge", 'both');
 				stream_set_blocking($s, false);
 				$states[$p] = fread($s, 1) * 1;
 				@rewind($s);
 				$streams[$p] = $s;
+				$debounces[$p] = 0;
 			}
 		}
 
+		repeatWatch:
+
+		$_STREAMS = $streams;
 		declare(ticks=1) {
-			$result = @stream_select($read, $write, $streams, $seconds, $micro);
+			$result = @stream_select($read, $write, $_STREAMS, $seconds, $micro);
 		}
 
 		if (false === $result) {
 			return NULL;
 		}
-
 		$result = NULL;
-
-		foreach ($streams as $pin => $stream) {
+		foreach ($_STREAMS as $pin => $stream) {
 			$value = fread($stream, 1);
 			@rewind($stream);
 
 			if ($value !== false && $value != $states[$pin]) {
-				if($edge & 1 && $value>0 || $edge & 2 && $value < 1) {
-					$result = $pins[$pin];
-					break;
+				if(microtime(true)>$debounces[$pin] + $pins[$pin]->getDebounce()/1000) {
+					$debounces[$pin] = microtime(true);
+
+					if($value>0) {
+						// Rising edge
+						if($pins[$pin]->getWatchedEdge() & EdgeInterface::EDGE_RISING) {
+							$result = $pins[$pin];
+							break;
+						}
+					} else {
+						// Falling edge
+						if($pins[$pin]->getWatchedEdge() & EdgeInterface::EDGE_FALLING) {
+							$result = $pins[$pin];
+							break;
+						}
+					}
 				}
 			}
+			$states[$pin] = $value;
 		}
+
+		if(!$result)
+			goto repeatWatch;
 
 		array_walk($streams, function($v) { @fclose($v); });
 		return $result;
