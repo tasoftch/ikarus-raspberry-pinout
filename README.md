@@ -79,17 +79,50 @@ $dev->getOutputPin( MyPinout::MOTOR_B )->setValue(0);
 // Releases all pins and brings them into a secure state (mode = input, value = 0 and resistor = none).
 $dev->cleanup();
 ```
-Or even saver:
+Or use the built-in safe loop method:
 
 ```php
 <?php
-
-try {
-    ...
-} catch (WhatEver $e) {
-    ...
-} finally {
-    $dev->cleanup();
-}
-
+$dev->loop(1/1000, function() {
+    // Safe loop call
+});
 ```
+Safe means that Ikarus ensures that the method ```$dev->cleanup()``` gets called in any case.  
+It registers interruption handlers, so ^C in command line will also cleanup.
+
+### Edges
+Ikarus implements an edge detection mechanism.  
+So to improve the example above you can watch an edge instead of polling the pin:
+
+`````php
+<?php
+use Ikarus\Raspberry\Edge\Edge;
+
+// Change
+/** @var \Ikarus\Raspberry\RaspberryPiDevice $dev */
+while ( $dev->getInputPin( MyPinout::CONTACT_A )->getValue() )
+    usleep(10000);
+// Into
+$edge = new Edge($dev->getInputPin( MyPinout::CONTACT_A ), Edge::EDGE_FALLING);
+
+// Watch for 2.5 seconds for a falling edge
+// This method blocks until the requested edge (raising|falling|both) did occur or time is up.
+if($dev->watchEdge(2.5, $edge)) {
+    echo "OK, Motor stopp\n";
+} else {
+    echo "Failed! Action took too long!\n";
+}
+$dev->getOutputPin( MyPinout::MOTOR_A )->setValue(0);
+
+// You can also check the $edge like
+switch ($edge->getValue()) {
+    case Edge::VALUE_DID_FALL: echo "did fall"; break;
+    case Edge::VALUE_DID_RISE: echo "did rise"; break;
+    default:
+        echo "Nothing happen";
+}
+`````
+Watching edges uses much less cpu performance than polling the pin.
+
+Please note that the pin state might bounce.  
+So getting the pin's value from $edge->getValue() holds the real triggering edge value.

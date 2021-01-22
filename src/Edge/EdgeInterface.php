@@ -43,6 +43,10 @@ interface EdgeInterface
 	const EDGE_FALLING = 2;
 	const EDGE_BOTH = 3;
 
+	const VALUE_NONE = 0;
+	const VALUE_DID_FALL = -1;
+	const VALUE_DID_RISE = 1;
+
 	/**
 	 * @return InputPinInterface
 	 */
@@ -61,4 +65,7 @@ interface EdgeInterface
 	 * @return int
 	 */
 	public function getDebounce(): int;
+
+	public function setValue(int $value);
+	public function getValue(): int;
 }

@@ -45,6 +45,8 @@ class Edge implements EdgeInterface
 	private $watchedEdge;
 	/** @var int */
 	private $debounce;
+	/** @var int  */
+	private $value = self::VALUE_NONE;
 
 	/**
 	 * Edge constructor.
@@ -81,5 +83,21 @@ class Edge implements EdgeInterface
 	public function getDebounce(): int
 	{
 		return $this->debounce;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getValue(): int
+	{
+		return $this->value;
+	}
+
+	/**
+	 * @param int $value
+	 */
+	public function setValue(int $value)
+	{
+		$this->value = $value;
 	}
 }

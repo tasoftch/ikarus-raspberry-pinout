@@ -447,7 +447,7 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 			$result = @stream_select($read, $write, $_STREAMS, $seconds, $micro);
 		}
 
-		if (false === $result) {
+		if (!$result) {
 			return NULL;
 		}
 		$result = NULL;
@@ -463,12 +463,14 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 						// Rising edge
 						if($pins[$pin]->getWatchedEdge() & EdgeInterface::EDGE_RISING) {
 							$result = $pins[$pin];
+							$result->setValue(EdgeInterface::VALUE_DID_RISE);
 							break;
 						}
 					} else {
 						// Falling edge
 						if($pins[$pin]->getWatchedEdge() & EdgeInterface::EDGE_FALLING) {
 							$result = $pins[$pin];
+							$result->setValue(EdgeInterface::VALUE_DID_FALL);
 							break;
 						}
 					}
