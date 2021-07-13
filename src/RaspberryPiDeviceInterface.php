@@ -231,4 +231,10 @@ interface RaspberryPiDeviceInterface
 	 * @return EdgeInterface|null
 	 */
 	public function watchEdge($timeout, EdgeInterface ...$edges): ?EdgeInterface;
+
+	/**
+	 * This function gets called always on terminating the process from a watchEdge or loop call.
+	 * @param callable $function
+	 */
+	public function registerCleanupFunction(callable $function);
 }

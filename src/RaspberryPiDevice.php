@@ -63,6 +63,7 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 	private $pinout;
 	private $hardware;
 	private $serial;
+	private $cleanUpFuncs=[];
 
 	protected static $device;
 
@@ -352,6 +353,7 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 	{
 		foreach(array_values($this->usedPins) as $pin)
 			$this->releasePin($pin);
+		array_walk($this->cleanUpFuncs, function($cb) { $cb(); });
 	}
 
 	/**
@@ -412,7 +414,6 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 	public function watchEdge($timeout, EdgeInterface ...$edges): ?EdgeInterface {
 		$seconds = floor($timeout);
 		$micro = ($timeout - $seconds) * 1e6;
-
 		$read = $write = $streams = $pins = $states = $debounces = [];
 
 		if(function_exists("pcntl_signal")) {
@@ -430,6 +431,7 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 		foreach($edges as $edge) {
 			$p = $edge->getInputPin()->getPinNumber();
 			$pins[$p] = $edge;
+			
 			if($s = @fopen("/sys/class/gpio/gpio$p/value", 'r')) {
 				file_put_contents("/sys/class/gpio/gpio$p/edge", 'both');
 				stream_set_blocking($s, false);
@@ -484,6 +486,14 @@ class RaspberryPiDevice implements RaspberryPiDeviceInterface
 
 		array_walk($streams, function($v) { @fclose($v); });
 		return $result;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function registerCleanupFunction(callable $function)
+	{
+		$this->cleanUpFuncs[] = $function;
 	}
 
 
