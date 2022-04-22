@@ -39,7 +39,36 @@ use Ikarus\Raspberry\Pinout\AbstractMappedPinout;
 
 abstract class AbstractBoardPinout extends AbstractMappedPinout
 {
-    protected $pinMap = [
+	const BRD_3 = 3;
+	const BRD_5 = 5;
+	const BRD_7 = 7;
+	const BRD_8 = 8;
+	const BRD_10 = 10;
+	const BRD_11 = 11;
+	const BRD_12 = 12;
+	const BRD_13 = 13;
+	const BRD_15 = 15;
+	const BRD_16 = 16;
+	const BRD_18 = 18;
+	const BRD_19 = 19;
+	const BRD_21 = 21;
+	const BRD_22 = 22;
+	const BRD_23 = 23;
+	const BRD_24 = 24;
+	const BRD_26 = 26;
+	const BRD_27 = 27;
+	const BRD_28 = 28;
+	const BRD_29 = 29;
+	const BRD_31 = 31;
+	const BRD_32 = 32;
+	const BRD_33 = 33;
+	const BRD_35 = 35;
+	const BRD_36 = 36;
+	const BRD_37 = 37;
+	const BRD_38 = 38;
+	const BRD_40 = 40;
+
+	protected $pinMap = [
         3 => 2,
         5 => 3,
         7 => 4,

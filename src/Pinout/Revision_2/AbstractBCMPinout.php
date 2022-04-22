@@ -39,7 +39,25 @@ use Ikarus\Raspberry\Pinout\AbstractMappedPinout;
 
 abstract class AbstractBCMPinout extends AbstractMappedPinout
 {
-    protected $pinMap = [
+	const BCM_2 = 2;
+	const BCM_3 = 3;
+	const BCM_4 = 4;
+	const BCM_7 = 7;
+	const BCM_8 = 8;
+	const BCM_9 = 9;
+	const BCM_10 = 10;
+	const BCM_11 = 11;
+	const BCM_14 = 14;
+	const BCM_15 = 15;
+	const BCM_17 = 17;
+	const BCM_18 = 18;
+	const BCM_22 = 22;
+	const BCM_23 = 23;
+	const BCM_24 = 24;
+	const BCM_25 = 25;
+	const BCM_27 = 27;
+
+	protected $pinMap = [
         2 => 2,
         3 => 3,
         4 => 4,

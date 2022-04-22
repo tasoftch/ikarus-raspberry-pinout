@@ -39,6 +39,24 @@ use Ikarus\Raspberry\Pinout\AbstractMappedPinout;
 
 abstract class AbstractWpiPinout extends AbstractMappedPinout
 {
+	const WPI_0 = 0;
+	const WPI_1 = 1;
+	const WPI_2 = 2;
+	const WPI_3 = 3;
+	const WPI_4 = 4;
+	const WPI_5 = 5;
+	const WPI_6 = 6;
+	const WPI_7 = 7;
+	const WPI_8 = 8;
+	const WPI_9 = 9;
+	const WPI_10 = 10;
+	const WPI_11 = 11;
+	const WPI_12 = 12;
+	const WPI_13 = 13;
+	const WPI_14 = 14;
+	const WPI_15 = 15;
+	const WPI_16 = 16;
+
     protected $pinMap = [
         0 => 17,
         1 => 18,
